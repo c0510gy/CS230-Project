@@ -1,4 +1,4 @@
-# CS230-Project
+# CS230 Winter 2024 Project
 
 This repository contains implementation of our web app application for graph layout optimization using proposed distributed readability measuring algorithms.
 
