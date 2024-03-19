@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <meta name="description" content="" />
+    <meta name="author" content="" />
+    {% load static %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.0/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.datatables.net/2.0.2/css/dataTables.dataTables.css" />
+    <script src="https://cdn.datatables.net/2.0.2/js/dataTables.js"></script>
+    <title>Graph Layout Optimizer</title>
+    <link href="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/style.min.css" rel="stylesheet" />
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet" />
+    <script src="https://use.fontawesome.com/releases/v6.3.0/js/all.js" crossorigin="anonymous"></script>
+  </head>
+  <body class="sb-nav-fixed">
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="exampleModalCenter"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="exampleModalCenterTitle"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="exampleModalLongTitle">Visualization</h5>
+            <button type="button" class="close" onclick="$('#exampleModalCenter').modal('toggle')">
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body"><img width="100%" id="modalImage" /></div>
+          <div class="modal-footer">
+            <button
+              type="button"
+              class="btn btn-secondary"
+              data-dismiss="modal"
+              onclick="$('#exampleModalCenter').modal('toggle')"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="sb-topnav navbar navbar-expand navbar-dark bg-dark">
+      <!-- Navbar Brand-->
+      <a class="navbar-brand ps-3" href="index.html">Graph Layout Optimizer</a>
+      <!-- Sidebar Toggle-->
+      <button class="btn btn-link btn-sm order-1 order-lg-0 me-4 me-lg-0" id="sidebarToggle" href="#!">
+        <i class="fas fa-bars"></i>
+      </button>
+      <!-- Navbar Search-->
+      <form class="d-none d-md-inline-block form-inline ms-auto me-0 me-md-3 my-2 my-md-0">
+        <div class="input-group">
+          <input
+            class="form-control"
+            type="text"
+            placeholder="Search for..."
+            aria-label="Search for..."
+            aria-describedby="btnNavbarSearch"
+          />
+          <button class="btn btn-primary" id="btnNavbarSearch" type="button"><i class="fas fa-search"></i></button>
+        </div>
+      </form>
+      <!-- Navbar-->
+      <ul class="navbar-nav ms-auto ms-md-0 me-3 me-lg-4">
+        <li class="nav-item dropdown">
+          <a
+            class="nav-link dropdown-toggle"
+            id="navbarDropdown"
+            href="#"
+            role="button"
+            data-bs-toggle="dropdown"
+            aria-expanded="false"
+            ><i class="fas fa-user fa-fw"></i
+          ></a>
+          <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+            <li><a class="dropdown-item" href="#!">Settings</a></li>
+            <li><a class="dropdown-item" href="#!">Activity Log</a></li>
+            <li><hr class="dropdown-divider" /></li>
+            <li><a class="dropdown-item" href="#!">Logout</a></li>
+          </ul>
+        </li>
+      </ul>
+    </nav>
+    <div id="layoutSidenav">
+      <div id="layoutSidenav_nav">
+        <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+          <div class="sb-sidenav-menu">
+            <div class="nav">
+              <div class="sb-sidenav-menu-heading">Core</div>
+              <a class="nav-link" href="index.html">
+                <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                Optimization
+              </a>
+            </div>
+          </div>
+          <div class="sb-sidenav-footer">
+            <div class="small">Logged in as:</div>
+            Guest
+          </div>
+        </nav>
+      </div>
+      <div id="layoutSidenav_content">
+        <main>
+          <div class="container-fluid px-4">
+            <h1 class="mt-4">Optimization</h1>
+            <ol class="breadcrumb mb-4">
+              <li class="breadcrumb-item active">Graph Layout Optimization Console</li>
+            </ol>
+            <div class="row">
+              <div class="mb-3">
+                <label for="formFile" class="form-label">Graph File Upload</label>
+                <input class="form-control" type="file" id="formFile" style="margin-bottom: 5px" />
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                  <button class="btn btn-primary" type="button" id="startoptim">
+                    <span
+                      id="startButtonSpinner"
+                      class="spinner-border spinner-border-sm d-none"
+                      role="status"
+                      aria-hidden="true"
+                    ></span>
+                    Start new optimization
+                  </button>
+                  <button id="stopButton" type="button" class="btn btn-danger d-none">Stop</button>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="mb-3">
+                <button
+                  class="btn btn-primary"
+                  style="margin-bottom: 5px"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#consoleoutputCollapse"
+                  aria-expanded="false"
+                  aria-controls="consoleoutputCollapse"
+                >
+                  Show/Hide PySpark Console Output
+                </button>
+                <div class="collapse" id="consoleoutputCollapse">
+                  <div class="card card-body" style="padding: 0px">
+                    <pre
+                      id="console_out"
+                      style="max-height: 100px; overflow: scroll; margin: 0px; background-color: black; color: white"
+                    ></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div id="progressRow" class="row">
+              <div class="mb-3">
+                <p class="text-center" style="margin: 0px">Total Optimization Progress</p>
+                <div class="progress">
+                  <div
+                    id="totalprogress"
+                    class="progress-bar progress-bar-striped bg-success progress-bar-animated"
+                    role="progressbar"
+                    aria-valuenow="0"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <p class="text-center" style="margin: 0px">Current Layout Generation Progress</p>
+                <div class="progress">
+                  <div
+                    id="layoutgenprogress"
+                    class="progress-bar progress-bar-striped progress-bar-animated"
+                    role="progressbar"
+                    aria-valuenow="0"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    style="width: 0%"
+                  ></div>
+                </div>
+                <div class="alert alert-primary" role="alert" style="margin-top: 10px">
+                  <span
+                    id="startButtonSpinner"
+                    class="spinner-border spinner-border-sm"
+                    role="status"
+                    aria-hidden="true"
+                    style="margin-right: 10px"
+                  ></span>
+                  <span id="progressDesc" style="margin: 0px">Total Optimization Progress</span>
+                </div>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-xl-6">
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <i class="fas fa-chart-area me-1"></i>
+                    Node Occlusion Chart
+                  </div>
+                  <div class="card-body"><canvas id="ncLineChart" width="100%" height="40"></canvas></div>
+                </div>
+              </div>
+              <div class="col-xl-6">
+                <div class="card mb-4">
+                  <div class="card-header">
+                    <i class="fas fa-chart-area me-1"></i>
+                    Edge Crossing Chart
+                  </div>
+                  <div class="card-body"><canvas id="ecLineChart" width="100%" height="40"></canvas></div>
+                </div>
+              </div>
+            </div>
+            <div class="card mb-4">
+              <div class="card-header">
+                <i class="fas fa-table me-1"></i>
+                Iterations
+              </div>
+              <div class="card-body">
+                <table id="iterationDataTable">
+                  <thead>
+                    <tr>
+                      <th>Trial</th>
+                      <th>C</th>
+                      <th>t</th>
+                      <th>Node Occlusion</th>
+                      <th>Edge Crossing</th>
+                      <th>Optimization Score</th>
+                      <th>Visualization</th>
+                    </tr>
+                  </thead>
+                  <tfoot>
+                    <tr>
+                      <th>Trial</th>
+                      <th>C</th>
+                      <th>t</th>
+                      <th>Node Occlusion</th>
+                      <th>Edge Crossing</th>
+                      <th>Optimization Score</th>
+                      <th>Visualization</th>
+                    </tr>
+                  </tfoot>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
+        <footer class="py-4 bg-light mt-auto">
+          <div class="container-fluid px-4">
+            <div class="d-flex align-items-center justify-content-between small">
+              <div class="text-muted">CS230 Winter 2024 - Sanggeon Yun, SungHeon Jung, Ryozo Masukawa</div>
+              <div>
+                <a href="#">Privacy Policy</a>
+                &middot;
+                <a href="#">Terms &amp; Conditions</a>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </div>
+    </div>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="{% static 'js/scripts.js' %}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" crossorigin="anonymous"></script>
+    <script src="{% static 'assets/demo/chart-area-demo.js' %}"></script>
+    <script src="{% static 'assets/demo/chart-bar-demo.js' %}"></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/simple-datatables@7.1.2/dist/umd/simple-datatables.min.js"
+      crossorigin="anonymous"
+    ></script>
+    <script src="{% static 'js/datatables-simple-demo.js' %}"></script>
+    <script>
+      const chartConfig = {
+        type: 'line',
+        data: {
+          labels: [],
+          datasets: [
+            {
+              label: 'Sessions',
+              lineTension: 0.3,
+              backgroundColor: 'rgba(2,117,216,0.2)',
+              borderColor: 'rgba(2,117,216,1)',
+              pointRadius: 5,
+              pointBackgroundColor: 'rgba(2,117,216,1)',
+              pointBorderColor: 'rgba(255,255,255,0.8)',
+              pointHoverRadius: 5,
+              pointHoverBackgroundColor: 'rgba(2,117,216,1)',
+              pointHitRadius: 50,
+              pointBorderWidth: 2,
+              data: [],
+            },
+          ],
+        },
+        options: {
+          scales: {
+            xAxes: [
+              {
+                gridLines: {
+                  display: false,
+                },
+                ticks: {
+                  maxTicksLimit: 7,
+                },
+              },
+            ],
+            yAxes: [
+              {
+                ticks: {
+                  min: 0,
+                  // max: 40000,
+                  maxTicksLimit: 5,
+                },
+                gridLines: {
+                  color: 'rgba(0, 0, 0, .125)',
+                },
+              },
+            ],
+          },
+          legend: {
+            display: false,
+          },
+        },
+      }
+      const ncLineChart = new Chart($('#ncLineChart'), JSON.parse(JSON.stringify(chartConfig)))
+      const ecLineChart = new Chart($('#ecLineChart'), JSON.parse(JSON.stringify(chartConfig)))
+      const datatable = $('#iterationDataTable').DataTable()
+      let total_iterations = 0
+      let curr_iteration = -1
+      function updateall() {
+        $.ajax({
+          type: 'GET',
+          dataType: 'json',
+          url: 'api/',
+          success: function (data, status, xhr) {
+            console.log('data: ', data)
+
+            running = data['running']
+
+            console_out = data['console_out']
+
+            if (!running) {
+              $('#startoptim').removeClass('disabled')
+              $('#startButtonSpinner').addClass('d-none')
+              $('#stopButton').addClass('d-none')
+              $('#progressRow').addClass('d-none')
+            } else {
+              $('#startoptim').addClass('disabled')
+              $('#startButtonSpinner').removeClass('d-none')
+              $('#stopButton').removeClass('d-none')
+              $('#progressRow').removeClass('d-none')
+            }
+
+            $('#console_out').text(console_out)
+            for (let i = total_iterations; i < data['opt_history'].length; i += 1) {
+              const { trial, C, t, nc, ec, score } = data['opt_history'][i]
+
+              //   if (total_iterations === 0 && i === 0) {
+              //     datatable.destroy()
+              //   }
+              datatable.row.add([
+                trial,
+                C,
+                t,
+                nc,
+                ec,
+                score,
+                `<img width="100" style="cursor: pointer;" src="api/get_visualization?num=${
+                  trial + 1
+                }" onclick="$('#modalImage').attr('src', 'api/get_visualization?num=${
+                  trial + 1
+                }'); $('#exampleModalCenter').modal('toggle')">`,
+              ])
+              datatable.draw(true)
+
+              //const chart = Chart.getChart($('#myAreaChart')) //$('#myAreaChart') //.data('myAreaChart')
+              //console.log(chart)
+              try {
+                ncLineChart.data.labels.push(trial)
+                ncLineChart.data.datasets.forEach((dataset) => {
+                  dataset.data.push(nc)
+                })
+                ncLineChart.update()
+              } catch (error) {}
+
+              try {
+                ecLineChart.data.labels.push(trial)
+                ecLineChart.data.datasets.forEach((dataset) => {
+                  dataset.data.push(ec)
+                })
+                ecLineChart.update()
+              } catch (error) {}
+            }
+
+            total_iterations = data['opt_history'].length
+
+            console_out = console_out.join('\n')
+            if (console_out.includes(`##NewIteration:${curr_iteration + 1}##`)) {
+              curr_iteration += 1
+
+              valuer = Math.floor((curr_iteration / 50) * 100)
+
+              console.log('NewIteration', valuer)
+
+              $('#totalprogress')
+                .css('width', valuer + '%')
+                .attr('aria-valuenow', valuer)
+
+              $('#totalprogress').text(valuer + '%')
+
+              $('#progressDesc').text('Preparing New Optimization Iteration...')
+            }
+
+            if (console_out.includes(`##NewIteration:${curr_iteration}##`)) {
+              const curr_output = console_out.split(`##NewIteration:${curr_iteration}##`)[1]
+
+              //layoutgenprogress
+
+              if (curr_output.includes('##LayoutGen##')) {
+                const layoutgenprog = curr_output.split('##LayoutGen##:')
+                console.log(layoutgenprog)
+                const layoutgenprog_r = parseInt(layoutgenprog[layoutgenprog.length - 1].split('%')[0].trim())
+                console.log('layoutgenprog_r', layoutgenprog_r)
+                $('#layoutgenprogress')
+                  .css('width', layoutgenprog_r + '%')
+                  .attr('aria-valuenow', layoutgenprog_r)
+                $('#layoutgenprogress').text(layoutgenprog_r + '%')
+
+                const layoutgenprog_detail = layoutgenprog[layoutgenprog.length - 1].split('[')[1].split(']')[0]
+
+                $('#progressDesc').text(`Generating Layout... (${layoutgenprog_detail})`)
+              }
+
+              if (curr_output.includes('##Visualizing##')) {
+                $('#progressDesc').text('Drawing Generated Layout...')
+              } else if (curr_output.includes('##ComputeEdgeCrossing##')) {
+                $('#progressDesc').text('Evaluating Edge Crossing Metric...')
+              } else if (curr_output.includes('##ComputeNodeOcclusion##')) {
+                $('#progressDesc').text('Evaluating Node Occlusion Metric...')
+              } else {
+                //$('#progressDesc').text('')
+              }
+            }
+
+            // ##NewIteration:{trials}##
+            // ##ComputeNodeOcclusion##
+            // ##ComputeEdgeCrossing##
+            // ##Visualizing##
+          },
+        })
+      }
+      updateall()
+      setInterval(updateall, 1000)
+
+      $('#startoptim').on('click', function (event) {
+        event.preventDefault() // To prevent following the link (optional)
+        $.ajax({
+          type: 'GET',
+          dataType: 'json',
+          url: 'api/run',
+          success: function (data, status, xhr) {
+            console.log('data: ', data)
+            if (data['status'] === 'success') {
+              alert('Optimization started')
+
+              $('#startoptim').addClass('disabled')
+              $('#startButtonSpinner').removeClass('d-none')
+              $('#stopButton').removeClass('d-none')
+              $('#progressRow').removeClass('d-none')
+            }
+          },
+        })
+      })
+      $('#stopButton').on('click', function (event) {
+        event.preventDefault() // To prevent following the link (optional)
+        $.ajax({
+          type: 'GET',
+          dataType: 'json',
+          url: 'api/stop',
+          success: function (data, status, xhr) {
+            console.log('data: ', data)
+          },
+        })
+      })
+    </script>
+  </body>
+</html>
